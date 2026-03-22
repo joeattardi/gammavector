@@ -114,13 +114,17 @@ class MainScene extends Phaser.Scene {
         });
 
         // Coin Magnet Logic
-        const magnetRange = 150;
-        const magnetSpeed = 200;
+        const magnetRange = 100;
+        const baseMagnetSpeed = 100;
 
         this.coins.getChildren().forEach(coin => {
             const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, coin.x, coin.y);
             if (distance < magnetRange) {
-                this.physics.moveToObject(coin, this.player, magnetSpeed);
+                // Calculation: normalized distance from 0 (at magnetRange) to 1 (at player)
+                const proximity = 1 - (distance / magnetRange);
+                // Accelerated speed: base speed plus an extra boost that grows quadratically
+                const speed = baseMagnetSpeed + (proximity * proximity * 600);
+                this.physics.moveToObject(coin, this.player, speed);
             } else {
                 // Stop the coin if it's no longer in range (and was moving)
                 if (coin.body.velocity.x !== 0 || coin.body.velocity.y !== 0) {
