@@ -9,11 +9,14 @@ class MainScene extends Phaser.Scene {
         this.player = null;
         this.enemies = null;
         this.bullets = null;
+        this.coins = null;
         this.cursors = null;
         this.score = 0;
         this.health = 100;
         this.scoreText = null;
         this.healthText = null;
+        this.coinText = null;
+        this.coinCount = 0;
         this.lastFired = 0;
         this.fireRate = 500; // ms
         this.spawnRate = 1000; // ms
@@ -42,6 +45,7 @@ class MainScene extends Phaser.Scene {
         });
 
         this.enemies = this.physics.add.group();
+        this.coins = this.physics.add.group();
 
         // Input
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -50,6 +54,7 @@ class MainScene extends Phaser.Scene {
         // UI
         this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '24px', fill: '#fff' });
         this.healthText = this.add.text(16, 48, 'Health: 100', { fontSize: '24px', fill: '#fff' });
+        this.coinText = this.add.text(16, 80, 'Coins: 0', { fontSize: '24px', fill: '#fff' });
 
         // Timers
         this.time.addEvent({
@@ -62,6 +67,7 @@ class MainScene extends Phaser.Scene {
         // Collisions
         this.physics.add.overlap(this.bullets, this.enemies, this.hitEnemy, null, this);
         this.physics.add.overlap(this.player, this.enemies, this.hitPlayer, null, this);
+        this.physics.add.overlap(this.player, this.coins, this.collectCoin, null, this);
     }
 
     createTextures() {
@@ -82,6 +88,12 @@ class MainScene extends Phaser.Scene {
         graphics.fillStyle(0xffffff, 1);
         graphics.fillCircle(4, 4, 4);
         graphics.generateTexture('bullet', 8, 8);
+
+        // Coin: Yellow Circle
+        graphics.clear();
+        graphics.fillStyle(0xffff00, 1);
+        graphics.fillCircle(8, 8, 8);
+        graphics.generateTexture('coin', 16, 16);
     }
 
     update(time) {
@@ -169,11 +181,23 @@ class MainScene extends Phaser.Scene {
         enemy.setCollideWorldBounds(true);
     }
 
+    spawnCoin(x, y) {
+        let coin = this.coins.create(x, y, 'coin');
+        // Simple scale effect or physics properties could be added here
+    }
+
+    collectCoin(player, coin) {
+        coin.destroy();
+        this.coinCount += 1;
+        this.coinText.setText('Coins: ' + this.coinCount);
+    }
+
     hitEnemy(bullet, enemy) {
         bullet.setActive(false);
         bullet.setVisible(false);
         bullet.body.setVelocity(0, 0);
         
+        this.spawnCoin(enemy.x, enemy.y);
         enemy.destroy();
 
         this.score += 10;
