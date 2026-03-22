@@ -56,6 +56,16 @@ class MainScene extends Phaser.Scene {
         this.healthText = this.add.text(16, 48, 'Health: 100', { fontSize: '24px', fill: '#fff' });
         this.coinText = this.add.text(16, 80, 'Coins: 0', { fontSize: '24px', fill: '#fff' });
 
+        // Particle Emitter for Explosions
+        this.explosionEmitter = this.add.particles(0, 0, 'bullet', {
+            speed: { min: 50, max: 150 },
+            scale: { start: 1, end: 0 },
+            tint: [0xff0000, 0xffa500, 0xffff00], // Red, Orange, Yellow
+            lifespan: 500,
+            gravityY: 0,
+            emitting: false
+        });
+
         // Timers
         this.time.addEvent({
             delay: this.spawnRate,
@@ -92,8 +102,8 @@ class MainScene extends Phaser.Scene {
         // Coin: Yellow Circle
         graphics.clear();
         graphics.fillStyle(0xffff00, 1);
-        graphics.fillCircle(8, 8, 8);
-        graphics.generateTexture('coin', 16, 16);
+        graphics.fillCircle(4, 4, 4);
+        graphics.generateTexture('coin', 8, 8);
     }
 
     update(time) {
@@ -217,6 +227,7 @@ class MainScene extends Phaser.Scene {
         bullet.setVisible(false);
         bullet.body.setVelocity(0, 0);
         
+        this.explosionEmitter.explode(15, enemy.x, enemy.y);
         this.spawnCoin(enemy.x, enemy.y);
         enemy.destroy();
 
@@ -225,7 +236,12 @@ class MainScene extends Phaser.Scene {
     }
 
     hitPlayer(player, enemy) {
+        this.explosionEmitter.explode(15, enemy.x, enemy.y);
         enemy.destroy();
+
+        // Screen effects: Flash and Shake
+        this.cameras.main.flash(200, 255, 0, 0); // Red flash
+        this.cameras.main.shake(200, 0.01);      // Subtle shake
 
         this.health -= 10;
         this.healthText.setText('Health: ' + this.health);
