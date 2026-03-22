@@ -113,6 +113,22 @@ class MainScene extends Phaser.Scene {
             this.physics.moveToObject(enemy, this.player, 100);
         });
 
+        // Coin Magnet Logic
+        const magnetRange = 150;
+        const magnetSpeed = 200;
+
+        this.coins.getChildren().forEach(coin => {
+            const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, coin.x, coin.y);
+            if (distance < magnetRange) {
+                this.physics.moveToObject(coin, this.player, magnetSpeed);
+            } else {
+                // Stop the coin if it's no longer in range (and was moving)
+                if (coin.body.velocity.x !== 0 || coin.body.velocity.y !== 0) {
+                    coin.body.setVelocity(0, 0);
+                }
+            }
+        });
+
         // Cleanup bullets that leave the screen
         this.bullets.getChildren().forEach(bullet => {
             if (bullet.y < 0 || bullet.y > 600 || bullet.x < 0 || bullet.x > 800) {
