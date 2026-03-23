@@ -20,6 +20,11 @@ class MainScene extends Phaser.Scene {
         this.lastFired = 0;
         this.fireRate = 500; // ms
         this.spawnRate = 1000; // ms
+        this.starfieldLayers = null;
+        this.starfieldAmbientVx = 6;
+        this.starfieldAmbientVy = -2.5;
+        this.starfieldOffX = 0;
+        this.starfieldOffY = 0;
     }
 
     preload() {
@@ -35,6 +40,7 @@ class MainScene extends Phaser.Scene {
     create() {
         // Create textures for bullet, coin, thrusters (player & enemy ship are PNGs)
         this.createTextures();
+        this.setupStarfield();
 
         // Setup Player
         this.player = this.physics.add.sprite(400, 300, 'player');
@@ -101,6 +107,24 @@ class MainScene extends Phaser.Scene {
         });
         this.thrusterEmitter.setDepth(-1);
 
+        const makeRcsEmitter = () =>
+            this.add.particles(0, 0, 'rcsPuff', {
+                lifespan: { min: 95, max: 200 },
+                speed: { min: 48, max: 145 },
+                scale: { start: 1.05, end: 0 },
+                alpha: { start: 0.78, end: 0 },
+                tint: [0x77bbff, 0xaaefff, 0xffffff, 0xffddaa],
+                blendMode: 'ADD',
+                frequency: 9,
+                quantity: 2,
+                gravityY: 0,
+                emitting: false
+            });
+        this.rcsPortEmitter = makeRcsEmitter();
+        this.rcsStarboardEmitter = makeRcsEmitter();
+        this.rcsPortEmitter.setDepth(-1);
+        this.rcsStarboardEmitter.setDepth(-1);
+
         // Timers
         this.time.addEvent({
             delay: this.spawnRate,
@@ -161,9 +185,135 @@ class MainScene extends Phaser.Scene {
         graphics.fillStyle(0xffffff, 0.35);
         graphics.fillCircle(14, 14, 8);
         graphics.generateTexture('thrusterHalo', 28, 28);
+
+        // Side RCS puff (small but readable at higher emitter scale)
+        graphics.clear();
+        graphics.fillStyle(0x88ccff, 0.42);
+        graphics.fillCircle(5, 5, 5);
+        graphics.fillStyle(0xffffff, 0.55);
+        graphics.fillCircle(5, 5, 3);
+        graphics.fillStyle(0xffffff, 1);
+        graphics.fillCircle(5, 5, 1.5);
+        graphics.generateTexture('rcsPuff', 10, 10);
+
+        // Starfield sprites
+        graphics.clear();
+        graphics.fillStyle(0xffffff, 1);
+        graphics.fillCircle(1, 1, 0.75);
+        graphics.generateTexture('starPin', 3, 3);
+
+        graphics.clear();
+        graphics.fillStyle(0xffffff, 0.35);
+        graphics.fillCircle(4, 4, 3.5);
+        graphics.fillStyle(0xffffff, 0.85);
+        graphics.fillCircle(4, 4, 1.4);
+        graphics.fillStyle(0xffffff, 1);
+        graphics.fillCircle(4, 4, 0.6);
+        graphics.generateTexture('starSoft', 8, 8);
+
+        graphics.clear();
+        graphics.fillStyle(0xaaccff, 0.2);
+        graphics.fillCircle(8, 8, 7);
+        graphics.fillStyle(0xffffff, 0.45);
+        graphics.fillCircle(8, 8, 3);
+        graphics.fillStyle(0xffffff, 1);
+        graphics.fillCircle(8, 8, 1.1);
+        graphics.generateTexture('starGlow', 16, 16);
     }
 
-    update(time) {
+    setupStarfield() {
+        const W = this.scale.width;
+        const H = this.scale.height;
+
+        const sky = this.add.graphics();
+        sky.fillGradientStyle(0x03050c, 0x050a18, 0x080c28, 0x10082a, 1);
+        sky.fillRect(0, 0, W, H);
+        sky.setDepth(-400);
+
+        const nebula = this.add.graphics();
+        const mist = (cx, cy, r, color, a) => {
+            nebula.fillStyle(color, a);
+            nebula.fillCircle(cx, cy, r);
+        };
+        mist(W * 0.18, H * 0.72, 220, 0x1a2a6e, 0.07);
+        mist(W * 0.82, H * 0.22, 260, 0x3d1a5c, 0.06);
+        mist(W * 0.55, H * 0.48, 180, 0x0d3d55, 0.055);
+        mist(W * 0.08, H * 0.18, 140, 0x2244aa, 0.04);
+        nebula.setDepth(-390);
+
+        const tints = [0xffffff, 0xdde8ff, 0xffeedd, 0xccd8ff];
+        const layerDefs = [
+            { key: 'starPin', count: 160, depth: -380, scaleMin: 0.55, scaleMax: 1.05, alphaMin: 0.32, alphaMax: 0.78, parallax: 0.038, twinkle: 0 },
+            { key: 'starSoft', count: 72, depth: -370, scaleMin: 0.45, scaleMax: 0.95, alphaMin: 0.42, alphaMax: 0.92, parallax: 0.082, twinkle: 0.12 },
+            { key: 'starGlow', count: 26, depth: -360, scaleMin: 0.5, scaleMax: 1.15, alphaMin: 0.5, alphaMax: 1, parallax: 0.135, twinkle: 0.22 }
+        ];
+
+        this.starfieldLayers = layerDefs.map((def) => {
+            const stars = [];
+            for (let i = 0; i < def.count; i++) {
+                const img = this.add.image(
+                    Phaser.Math.Between(0, W),
+                    Phaser.Math.Between(0, H),
+                    def.key
+                );
+                const s = Phaser.Math.FloatBetween(def.scaleMin, def.scaleMax);
+                img.setScale(s);
+                const baseA = Phaser.Math.FloatBetween(def.alphaMin, def.alphaMax);
+                img.setAlpha(baseA);
+                img.setDepth(def.depth);
+                img.setTint(Phaser.Utils.Array.GetRandom(tints));
+                if (def.key === 'starGlow' || def.key === 'starSoft') {
+                    img.setBlendMode(Phaser.BlendModes.ADD);
+                }
+                stars.push({
+                    img,
+                    baseX: img.x,
+                    baseY: img.y,
+                    baseAlpha: baseA,
+                    twinkle: def.twinkle,
+                    twinklePhase: Phaser.Math.FloatBetween(0, Math.PI * 2),
+                    parallax: def.parallax
+                });
+            }
+            return { stars, parallax: def.parallax };
+        });
+    }
+
+    updateStarfield(time, delta) {
+        if (!this.starfieldLayers) return;
+
+        const dt = delta / 1000;
+        let vx = this.starfieldAmbientVx;
+        let vy = this.starfieldAmbientVy;
+        if (this.health > 0 && this.player && this.player.body) {
+            vx -= this.player.body.velocity.x * 0.06;
+            vy -= this.player.body.velocity.y * 0.06;
+        }
+        this.starfieldOffX += vx * dt;
+        this.starfieldOffY += vy * dt;
+
+        const W = this.scale.width;
+        const H = this.scale.height;
+
+        this.starfieldLayers.forEach((layer) => {
+            const p = layer.parallax;
+            const ox = this.starfieldOffX * p;
+            const oy = this.starfieldOffY * p;
+            layer.stars.forEach((star) => {
+                const x = star.baseX - ox;
+                const y = star.baseY - oy;
+                star.img.x = Phaser.Math.Wrap(x, 0, W);
+                star.img.y = Phaser.Math.Wrap(y, 0, H);
+                if (star.twinkle > 0) {
+                    const pulse = Math.sin(time * 0.0028 + star.twinklePhase) * 0.5 + 0.5;
+                    star.img.setAlpha(star.baseAlpha * (1 - star.twinkle + pulse * star.twinkle));
+                }
+            });
+        });
+    }
+
+    update(time, delta) {
+        this.updateStarfield(time, delta);
         if (this.health <= 0) return;
 
         // Player Movement
@@ -245,6 +395,10 @@ class MainScene extends Phaser.Scene {
         this.player.setAcceleration(ax, ay);
         this.updateThrusterVisual(ax, ay);
         this.updateThrusterSound(ax, ay);
+
+        const rotatingLeft = this.cursors.left.isDown || this.wasd.A.isDown;
+        const rotatingRight = this.cursors.right.isDown || this.wasd.D.isDown;
+        this.updateManeuverThrusterVisual(rotatingLeft, rotatingRight);
     }
 
     updateThrusterSound(ax, ay) {
@@ -289,6 +443,32 @@ class MainScene extends Phaser.Scene {
         this.thrusterEmitter.setPosition(px, py);
         this.thrusterEmitter.ops.angle.loadConfig({ angle: { min: deg - 26, max: deg + 26 } });
         this.thrusterEmitter.emitting = true;
+    }
+
+    updateManeuverThrusterVisual(rotatingLeft, rotatingRight) {
+        const r = this.player.rotation;
+        const d = 13;
+
+        if (rotatingLeft) {
+            const sx = -Math.sin(r);
+            const sy = Math.cos(r);
+            const deg = Phaser.Math.RadToDeg(Math.atan2(sy, sx));
+            this.rcsStarboardEmitter.setPosition(this.player.x + sx * d, this.player.y + sy * d);
+            this.rcsStarboardEmitter.ops.angle.loadConfig({ angle: { min: deg - 22, max: deg + 22 } });
+            this.rcsStarboardEmitter.emitting = true;
+            this.rcsPortEmitter.emitting = false;
+        } else if (rotatingRight) {
+            const sx = Math.sin(r);
+            const sy = -Math.cos(r);
+            const deg = Phaser.Math.RadToDeg(Math.atan2(sy, sx));
+            this.rcsPortEmitter.setPosition(this.player.x + sx * d, this.player.y + sy * d);
+            this.rcsPortEmitter.ops.angle.loadConfig({ angle: { min: deg - 22, max: deg + 22 } });
+            this.rcsPortEmitter.emitting = true;
+            this.rcsStarboardEmitter.emitting = false;
+        } else {
+            this.rcsPortEmitter.emitting = false;
+            this.rcsStarboardEmitter.emitting = false;
+        }
     }
 
     fireBullet() {
@@ -371,6 +551,8 @@ class MainScene extends Phaser.Scene {
         if (this.health <= 0) {
             this.thrusterEmitter.emitting = false;
             this.thrusterHaloEmitter.emitting = false;
+            this.rcsPortEmitter.emitting = false;
+            this.rcsStarboardEmitter.emitting = false;
             if (this.thrusterRumble && this.thrusterRumble.isPlaying) {
                 this.thrusterRumble.stop();
             }
