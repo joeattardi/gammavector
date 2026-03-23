@@ -49,6 +49,11 @@ export default class MainScene extends Phaser.Scene {
     }
 
     create() {
+        this.score = 0;
+        this.health = 100;
+        this.coinCount = 0;
+        this.lastFired = 0;
+
         this.createTextures();
         this.setupStarfield();
 
@@ -712,11 +717,9 @@ export default class MainScene extends Phaser.Scene {
             this.cameras.main.shake(500, 0.05);
             this.cameras.main.flash(500, 255, 255, 255);
 
-            const cam = this.cameras.main;
-            this.add
-                .text(cam.width * 0.5, cam.height * 0.5, 'GAME OVER', { fontSize: '64px', fill: '#fff' })
-                .setScrollFactor(0)
-                .setOrigin(0.5);
+            this.sound.stopAll();
+            this.game.events.emit('game-over');
+
             this.sound.play('playerDeath');
         }
     }
