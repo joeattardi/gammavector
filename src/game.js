@@ -33,10 +33,10 @@ class MainScene extends Phaser.Scene {
         this.enemyMaxSpeed = 220; // Enemies are faster than player for increased difficulty
         // Radar properties
         this.radarRange = 2500; // World units to detect
-        this.radarRadius = 80; // Screen pixels for radar display
+        this.radarRadius = 40; // Screen pixels for radar display
         this.radarGraphics = null;
-        this.radarX = 650; // Position on screen (bottom right)
-        this.radarY = 450;
+        this.radarX = 750; // Position on screen (bottom right with padding)
+        this.radarY = 550;
     }
 
     preload() {
@@ -81,13 +81,19 @@ class MainScene extends Phaser.Scene {
         this.qeKeys = this.input.keyboard.addKeys('Q,E');
 
         // UI (fixed to viewport while the world scrolls)
-        this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '24px', fill: '#fff' }).setScrollFactor(0);
-        this.healthText = this.add.text(16, 48, 'Health: 100', { fontSize: '24px', fill: '#fff' }).setScrollFactor(0);
-        this.coinText = this.add.text(16, 80, 'Coins: 0', { fontSize: '24px', fill: '#fff' }).setScrollFactor(0);
+        this.scoreText = this.add.text(16, 520, 'Score: 0', { fontSize: '24px', fill: '#fff' }).setScrollFactor(0);
+        this.healthText = this.add.text(16, 540, 'Health: 100', { fontSize: '24px', fill: '#fff' }).setScrollFactor(0);
+        this.coinText = this.add.text(16, 560, 'Coins: 0', { fontSize: '24px', fill: '#fff' }).setScrollFactor(0);
+
+        // Control Panel Background
+        this.panelGraphics = this.add.graphics().setScrollFactor(0);
+        this.panelGraphics.fillStyle(0x000000, 0.7);
+        this.panelGraphics.fillRect(0, 500, 800, 150);
+        this.panelGraphics.setDepth(-1);
 
         // Radar
         this.radarGraphics = this.add.graphics().setScrollFactor(0);
-        this.radarGraphics.setDepth(10); // Above other UI
+        this.radarGraphics.setDepth(10); // Above panel
 
         this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
         this.cameras.main.setRoundPixels(true);
@@ -763,7 +769,7 @@ const config = {
     type: Phaser.AUTO,
     parent: 'game-container',
     width: 800,
-    height: 600,
+    height: 650,
     audio: {
         disableWebAudio: false
     },
