@@ -27,6 +27,7 @@ class MainScene extends Phaser.Scene {
         this.load.audio('playerDeath', 'assets/playerDeath.wav');
         this.load.audio('enemyDestroyed', 'assets/enemyDestroyed.wav');
         this.load.audio('pickupCoin', 'assets/pickupCoin.wav');
+        this.load.audio('thrusterRumble', 'assets/thrusterRumble.wav');
     }
 
     create() {
@@ -110,6 +111,20 @@ class MainScene extends Phaser.Scene {
         this.physics.add.overlap(this.bullets, this.enemies, this.hitEnemy, null, this);
         this.physics.add.overlap(this.player, this.enemies, this.hitPlayer, null, this);
         this.physics.add.overlap(this.player, this.coins, this.collectCoin, null, this);
+
+        this.thrusterRumble = this.sound.add('thrusterRumble', {
+            loop: true,
+            volume: 0.82
+        });
+
+        const resumeAudio = () => {
+            const ctx = this.sound.context;
+            if (ctx && ctx.state === 'suspended') {
+                ctx.resume();
+            }
+        };
+        this.input.keyboard.once('keydown', resumeAudio);
+        this.input.once('pointerdown', resumeAudio);
     }
 
     createTextures() {
@@ -237,6 +252,25 @@ class MainScene extends Phaser.Scene {
 
         this.player.setAcceleration(ax, ay);
         this.updateThrusterVisual(ax, ay);
+        this.updateThrusterSound(ax, ay);
+    }
+
+    updateThrusterSound(ax, ay) {
+        const thrusting = ax * ax + ay * ay >= 1;
+        if (!this.thrusterRumble) {
+            return;
+        }
+        if (thrusting) {
+            const ctx = this.sound.context;
+            if (ctx && ctx.state === 'suspended') {
+                ctx.resume();
+            }
+            if (!this.thrusterRumble.isPlaying) {
+                this.thrusterRumble.play();
+            }
+        } else if (this.thrusterRumble.isPlaying) {
+            this.thrusterRumble.stop();
+        }
     }
 
     updateThrusterVisual(ax, ay) {
@@ -345,6 +379,9 @@ class MainScene extends Phaser.Scene {
         if (this.health <= 0) {
             this.thrusterEmitter.emitting = false;
             this.thrusterHaloEmitter.emitting = false;
+            if (this.thrusterRumble && this.thrusterRumble.isPlaying) {
+                this.thrusterRumble.stop();
+            }
             this.physics.pause();
             this.player.setTint(0xff0000);
             this.player.setVisible(false);
@@ -367,6 +404,9 @@ const config = {
     parent: 'game-container',
     width: 800,
     height: 600,
+    audio: {
+        disableWebAudio: false
+    },
     physics: {
         default: 'arcade',
         arcade: {
