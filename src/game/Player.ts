@@ -27,6 +27,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
         this.initializeThrusterEmitters();
 
+        this.thrusterRumble = scene.sound.add('thrusterRumble', {
+            loop: true,
+            volume: 2
+        });
+
         this.health = 1000;
     }
 

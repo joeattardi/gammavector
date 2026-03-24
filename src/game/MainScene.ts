@@ -72,7 +72,7 @@ export default class MainScene extends Phaser.Scene {
         this.createTextures();
         this.setupStarfield();
 
-        this.sound.play('backgroundMusic', { loop: true, volume: 0.5 });
+        this.sound.play('backgroundMusic', { loop: true, volume: 0.3 });
 
         this.physics.world.setBounds(-2e6, -2e6, 4e6, 4e6);
         this.physics.world.setBoundsCollision(false, false, false, false);
@@ -200,11 +200,6 @@ export default class MainScene extends Phaser.Scene {
             undefined,
             this
         );
-
-        this.thrusterRumble = this.sound.add('thrusterRumble', {
-            loop: true,
-            volume: 0.82
-        });
 
         const resumeAudio = (): void => {
             const ctx = (this.sound as Phaser.Sound.WebAudioSoundManager).context;
