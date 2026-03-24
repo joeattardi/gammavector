@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { ThrusterEffect } from './ThrusterEffect';
 import { RcsEffect } from './RcsEffect';
+import { ShipCommand } from './InputMapper';
 
 const DEFAULT_MAX_SPEED = 220;
 
@@ -29,12 +30,28 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.health = 100;
     }
 
-    update(
-        cursors: Phaser.Types.Input.Keyboard.CursorKeys,
-        keys: Record<string, Phaser.Input.Keyboard.Key>
-    ) {
-        this.updateMovement(cursors, keys);
+    update(command: ShipCommand) {
+        this.setAngularVelocity(command.angularVelocity);
+        this.setAcceleration(command.acceleration.x, command.acceleration.y);
 
+        this.thruster.update(this.x, this.y, command.acceleration);
+        this.rcs.update(
+            this.x,
+            this.y,
+            this.rotation,
+            command.isRotatingLeft,
+            command.isRotatingRight
+        );
+
+        this.clampVelocity();
+    }
+
+    stopEffects(): void {
+        this.thruster.stop();
+        this.rcs.stop();
+    }
+
+    private clampVelocity(): void {
         const velocityX = this.body.velocity.x;
         const velocityY = this.body.velocity.y;
 
@@ -48,54 +65,5 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
         const inv = max / Math.sqrt(m2);
         this.body.setVelocity(velocityX * inv, velocityY * inv);
-    }
-
-    stopEffects(): void {
-        this.thruster.stop();
-        this.rcs.stop();
-    }
-
-    private updateMovement(
-        cursors: Phaser.Types.Input.Keyboard.CursorKeys,
-        keys: Record<string, Phaser.Input.Keyboard.Key>
-    ): void {
-        const thrust = 300;
-
-        const isRotatingLeft = cursors.left.isDown || keys.A.isDown;
-        const isRotatingRight = cursors.right.isDown || keys.D.isDown;
-
-        if (isRotatingLeft && isRotatingRight) {
-            this.setAngularVelocity(0);
-        } else if (isRotatingLeft) {
-            this.setAngularVelocity(-220);
-        } else if (isRotatingRight) {
-            this.setAngularVelocity(220);
-        } else {
-            this.setAngularVelocity(0);
-        }
-
-        let acceleration = { x: 0, y: 0 };
-
-        if (cursors.up.isDown || keys.W.isDown) {
-            acceleration.x += Math.cos(this.rotation) * thrust;
-            acceleration.y += Math.sin(this.rotation) * thrust;
-        } else if (cursors.down.isDown || keys.S.isDown) {
-            acceleration.x -= Math.cos(this.rotation) * thrust;
-            acceleration.y -= Math.sin(this.rotation) * thrust;
-        }
-
-        if (keys.Q.isDown) {
-            acceleration.x += Math.cos(this.rotation - Math.PI / 2) * thrust;
-            acceleration.y += Math.sin(this.rotation - Math.PI / 2) * thrust;
-        }
-
-        if (keys.E.isDown) {
-            acceleration.x += Math.cos(this.rotation + Math.PI / 2) * thrust;
-            acceleration.y += Math.sin(this.rotation + Math.PI / 2) * thrust;
-        }
-
-        this.setAcceleration(acceleration.x, acceleration.y);
-        this.thruster.update(this.x, this.y, acceleration);
-        this.rcs.update(this.x, this.y, this.rotation, isRotatingLeft, isRotatingRight);
     }
 }

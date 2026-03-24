@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Player } from './Player';
+import { buildShipCommand } from './InputMapper';
 
 interface StarEntry {
     img: Phaser.GameObjects.Image;
@@ -393,7 +394,8 @@ export default class MainScene extends Phaser.Scene {
             return;
         }
 
-        this.player.update(this.cursors, this.keys);
+        const command = buildShipCommand(this.cursors, this.keys, this.player.rotation);
+        this.player.update(command);
 
         this.maybeRecenterWorld();
 
