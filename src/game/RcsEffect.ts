@@ -10,9 +10,7 @@ function setEmitterAngle(
     });
 }
 
-function createRcsEmitter(
-    scene: Phaser.Scene
-): Phaser.GameObjects.Particles.ParticleEmitter {
+function createRcsEmitter(scene: Phaser.Scene): Phaser.GameObjects.Particles.ParticleEmitter {
     const emitter = scene.add.particles(0, 0, 'rcsPuff', {
         lifespan: { min: 95, max: 200 },
         speed: { min: 48, max: 145 },

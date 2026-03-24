@@ -52,11 +52,7 @@ export class ThrusterEffect {
         });
     }
 
-    update(
-        playerX: number,
-        playerY: number,
-        acceleration: { x: number; y: number }
-    ): void {
+    update(playerX: number, playerY: number, acceleration: { x: number; y: number }): void {
         const magSq = acceleration.x * acceleration.x + acceleration.y * acceleration.y;
 
         if (magSq < 1) {

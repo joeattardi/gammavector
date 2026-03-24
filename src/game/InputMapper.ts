@@ -7,6 +7,11 @@ export interface ShipCommand {
     isRotatingRight: boolean;
 }
 
+interface AccelerationVector {
+    x: number;
+    y: number;
+}
+
 const THRUST = 300;
 const ANGULAR_SPEED = 220;
 
@@ -19,28 +24,48 @@ export function buildShipCommand(
     const isRotatingRight = cursors.right.isDown || keys.D.isDown;
 
     let angularVelocity = 0;
-    if (isRotatingLeft && !isRotatingRight) angularVelocity = -ANGULAR_SPEED;
-    else if (isRotatingRight && !isRotatingLeft) angularVelocity = ANGULAR_SPEED;
+    if (isRotatingLeft && !isRotatingRight) {
+        angularVelocity = -ANGULAR_SPEED;
+    } else if (isRotatingRight && !isRotatingLeft) {
+        angularVelocity = ANGULAR_SPEED;
+    }
 
-    const acceleration = { x: 0, y: 0 };
+    const acceleration: AccelerationVector = { x: 0, y: 0 };
 
     if (cursors.up.isDown || keys.W.isDown) {
-        acceleration.x += Math.cos(rotation) * THRUST;
-        acceleration.y += Math.sin(rotation) * THRUST;
-    } else if (cursors.down.isDown || keys.S.isDown) {
-        acceleration.x -= Math.cos(rotation) * THRUST;
-        acceleration.y -= Math.sin(rotation) * THRUST;
+        applyAcceleration(acceleration, rotation, 1, THRUST);
+    }
+
+    if (cursors.down.isDown || keys.S.isDown) {
+        applyAcceleration(acceleration, rotation, -1, THRUST);
     }
 
     if (keys.Q.isDown) {
-        acceleration.x += Math.cos(rotation - Math.PI / 2) * THRUST;
-        acceleration.y += Math.sin(rotation - Math.PI / 2) * THRUST;
+        applyLateralAcceleration(acceleration, rotation, -1);
     }
 
     if (keys.E.isDown) {
-        acceleration.x += Math.cos(rotation + Math.PI / 2) * THRUST;
-        acceleration.y += Math.sin(rotation + Math.PI / 2) * THRUST;
+        applyLateralAcceleration(acceleration, rotation, 1);
     }
 
     return { acceleration, angularVelocity, isRotatingLeft, isRotatingRight };
+}
+
+function applyAcceleration(
+    acceleration: AccelerationVector,
+    rotation: number,
+    offset: number,
+    thrust: number
+) {
+    acceleration.x += offset * (Math.cos(rotation) * thrust);
+    acceleration.y += offset * (Math.sin(rotation) * thrust);
+}
+
+function applyLateralAcceleration(
+    acceleration: AccelerationVector,
+    rotation: number,
+    offset: number
+) {
+    acceleration.x += Math.cos(rotation + (offset * Math.PI) / 2) * THRUST;
+    acceleration.y += Math.sin(rotation + (offset * Math.PI) / 2) * THRUST;
 }
