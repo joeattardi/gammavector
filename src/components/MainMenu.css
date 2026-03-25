@@ -40,6 +40,7 @@
     border: 2px solid rgba(100, 140, 255, 0.5);
     cursor: pointer;
     transition: all 0.2s ease;
+    font-family: 'Orbitron Variable', sans-serif;
 }
 
 .menu-button:hover {

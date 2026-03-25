@@ -16,15 +16,15 @@ export class Hud {
         panelGraphics.setDepth(5);
 
         this.scoreText = this.scene.add
-            .text(16, 520, 'Score: 0', { fontSize: '24px', color: '#fff' })
+            .text(16, 520, 'Score: 0', { fontFamily: '"Orbitron Variable"', fontSize: '18px', color: '#fff' })
             .setScrollFactor(0)
             .setDepth(6);
         this.healthText = this.scene.add
-            .text(16, 540, 'Health: 100', { fontSize: '24px', color: '#fff' })
+            .text(16, 540, 'Health: 100', { fontFamily: '"Orbitron Variable"', fontSize: '18px', color: '#fff' })
             .setScrollFactor(0)
             .setDepth(6);
         this.coinText = this.scene.add
-            .text(16, 560, 'Coins: 0', { fontSize: '24px', color: '#fff' })
+            .text(16, 560, 'Coins: 0', { fontFamily: '"Orbitron Variable"', fontSize: '18px', color: '#fff' })
             .setScrollFactor(0)
             .setDepth(6);
     }
