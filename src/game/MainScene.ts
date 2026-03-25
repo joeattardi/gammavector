@@ -208,6 +208,7 @@ export default class MainScene extends Phaser.Scene {
 
         this.hud.addScore(10);
         this.sound.play('enemyDestroyed');
+        this.cameras.main.flash(80, 200, 200, 200, true);
     }
 
     private hitPlayer(
