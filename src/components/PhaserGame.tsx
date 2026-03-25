@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import { createGameConfig } from '../game/config';
+import HudOverlay from './HudOverlay';
 
 export default function PhaserGame() {
     const containerRef = useRef<HTMLDivElement>(null);
     const gameRef = useRef<Phaser.Game | null>(null);
     const [showGameOver, setShowGameOver] = useState(false);
+    const [score, setScore] = useState(0);
+    const [health, setHealth] = useState(100);
+    const [coins, setCoins] = useState(0);
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -17,6 +21,9 @@ export default function PhaserGame() {
         game.events.on('game-over', () => {
             setShowGameOver(true);
         });
+        game.events.on('score-changed', (value: number) => setScore(value));
+        game.events.on('health-changed', (value: number) => setHealth(value));
+        game.events.on('coin-collected', (value: number) => setCoins(value));
 
         return () => {
             if (gameRef.current) {
@@ -30,6 +37,9 @@ export default function PhaserGame() {
         const game = gameRef.current;
         if (!game) return;
         setShowGameOver(false);
+        setScore(0);
+        setHealth(100);
+        setCoins(0);
         const scene = game.scene.getScene('MainScene');
         if (scene) {
             scene.sound.stopAll();
@@ -39,6 +49,7 @@ export default function PhaserGame() {
 
     return (
         <div ref={containerRef} id="game-container">
+            <HudOverlay score={score} health={health} coins={coins} />
             {showGameOver && (
                 <div
                     style={{
@@ -65,7 +76,8 @@ export default function PhaserGame() {
                             background: '#444',
                             color: '#fff',
                             border: '2px solid #888',
-                            borderRadius: '8px'
+                            borderRadius: '8px',
+                            fontFamily: 'Orbitron Variable, sans-serif',
                         }}
                         onMouseEnter={(e) =>
                             ((e.target as HTMLButtonElement).style.background = '#666')

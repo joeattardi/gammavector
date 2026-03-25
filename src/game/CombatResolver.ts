@@ -1,15 +1,14 @@
 import Phaser from 'phaser';
 import { Player } from './Player';
-import { Hud } from './Hud';
 import { CoinManager } from './CoinManager';
 
 export class CombatResolver {
     private readonly explosionEmitter: Phaser.GameObjects.Particles.ParticleEmitter;
+    private score = 0;
 
     constructor(
         private scene: Phaser.Scene,
         private player: Player,
-        private hud: Hud,
         private coinManager: CoinManager
     ) {
         this.explosionEmitter = this.scene.add.particles(0, 0, 'bullet', {
@@ -36,7 +35,8 @@ export class CombatResolver {
         this.coinManager.spawn(e.x, e.y);
         e.destroy();
 
-        this.hud.addScore(10);
+        this.score += 10;
+        this.scene.game.events.emit('score-changed', this.score);
         this.scene.sound.play('enemyDestroyed');
         this.scene.cameras.main.flash(80, 200, 200, 200, true);
     }
@@ -55,7 +55,7 @@ export class CombatResolver {
         this.scene.cameras.main.shake(200, 0.01);
 
         this.player.health -= 10;
-        this.hud.setHealth(this.player.health);
+        this.scene.game.events.emit('health-changed', this.player.health);
 
         if (this.player.health <= 0) {
             this.player.stopEffects();

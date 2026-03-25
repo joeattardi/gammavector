@@ -4,7 +4,6 @@ import { buildShipCommand } from './InputMapper';
 import { Starfield } from './Starfield';
 import { createTextures } from './textures';
 import { Radar } from './Radar';
-import { Hud } from './Hud';
 import { EnemySpawner } from './EnemySpawner';
 import { Weapons } from './Weapons';
 import { CoinManager } from './CoinManager';
@@ -18,7 +17,6 @@ export default class MainScene extends Phaser.Scene {
     private starfield!: Starfield;
     private readonly worldRecenterThreshold = 12000;
     private radar!: Radar;
-    private hud!: Hud;
     private spawner!: EnemySpawner;
     private weapons!: Weapons;
     private coinManager!: CoinManager;
@@ -47,11 +45,8 @@ export default class MainScene extends Phaser.Scene {
         this.weapons = new Weapons(this, this.player);
         this.spawner = new EnemySpawner(this, this.player);
 
-        this.hud = new Hud(this);
-        this.hud.setup();
-
-        this.coinManager = new CoinManager(this, this.player, this.hud);
-        this.combat = new CombatResolver(this, this.player, this.hud, this.coinManager);
+        this.coinManager = new CoinManager(this, this.player);
+        this.combat = new CombatResolver(this, this.player, this.coinManager);
 
         this.cursors = this.input.keyboard!.createCursorKeys();
         this.keys = this.input.keyboard?.addKeys('W,A,S,D,Q,E') as Record<
@@ -59,7 +54,7 @@ export default class MainScene extends Phaser.Scene {
             Phaser.Input.Keyboard.Key
         >;
 
-        this.radar = new Radar(this, 750, 550, 40, 2500);
+        this.radar = new Radar(this, 752, 602, 40, 2500);
         this.radar.setup();
 
         this.cameras.main.startFollow(this.player, true, 0.12, 0.12);

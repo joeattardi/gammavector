@@ -1,0 +1,23 @@
+.hud-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    gap: 32px;
+    padding: 12px 24px;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 5;
+    pointer-events: none;
+}
+
+.hud-item {
+    font-family: 'Orbitron Variable', sans-serif;
+    font-size: 18px;
+    color: #0ff;
+    text-shadow:
+        0 0 4px #0ff,
+        0 0 8px #0ff,
+        0 0 16px #0088ff,
+        0 0 32px #0088ff;
+}
